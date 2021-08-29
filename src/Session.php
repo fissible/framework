@@ -11,8 +11,7 @@ class Session
 
     private const SPECIAL_KEYS = [
         'flash' => '_flash',
-        'csrf' => '_token',
-        'input' => '_previous'
+        'csrf' => '_token'
     ];
 
     public function __construct(BaseSession $Session = null)
@@ -33,12 +32,6 @@ class Session
     public function flash(string $name, $value)
     {
         $contents = $this->get(self::SPECIAL_KEYS['flash']) ?? [];
-        $contents = $contents[$name] ?? [];
-
-        if (!is_array($contents)) {
-            throw new \InvalidArgumentException('Unable to push a value onto a non-array member.');
-        }
-
         $contents[$name] = $value;
 
         $this->set(self::SPECIAL_KEYS['flash'], $contents);
@@ -86,6 +79,19 @@ class Session
         $contents = $this->all();
 
         return isset($contents[$name]);
+    }
+
+    public function prev(string $name)
+    {
+        $value = '';
+        if ($flashed = $this->get(self::SPECIAL_KEYS['flash'])) {
+            if (isset($flashed['input']) && isset($flashed['input'][$name])) {
+                $value = $flashed['input'][$name];
+                unset($flashed['input'][$name]);
+            }
+        }
+
+        return $value;
     }
 
     public function push(string $name, array ...$values): self
@@ -146,12 +152,11 @@ class Session
 
         if ($value === null) {
             unset($contents[$name]);
-            $this->proxied->setContents($contents);
         } else {
-            $this->proxied->setContents(array_merge($contents, [
-                $name => $value
-            ]));
+            $contents[$name] = $value;
         }
+
+        $this->proxied->setContents($contents);
 
         return $this;
     }

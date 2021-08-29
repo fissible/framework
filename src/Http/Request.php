@@ -185,7 +185,7 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
 
     public function flashPrevious(array $exclude = [])
     {
-        $alwaysForget = ['password', 'password_confirm', 'ssn'];
+        $alwaysForget = ['_csrf', 'password', 'password_confirm', 'ssn'];
         $input = array_diff_key($this->input(), $exclude);
         foreach ($alwaysForget as $key) {
             if (isset($input[$key])) unset($input[$key]);
