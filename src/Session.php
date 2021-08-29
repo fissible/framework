@@ -11,7 +11,8 @@ class Session
 
     private const SPECIAL_KEYS = [
         'flash' => '_flash',
-        'csrf' => '_token'
+        'csrf' => '_token',
+        'input' => '_previous'
     ];
 
     public function __construct(BaseSession $Session = null)
