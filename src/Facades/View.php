@@ -59,6 +59,9 @@ class View
         return [
             'csrf' => function () {
                 return "<?php echo '<input type=\"hidden\" name=\"_csrf\" value=\"' . Session()->token() . '\" />' ?>";
+            },
+            'prev' => function ($name) {
+                return "<?php echo Session()->prev({$name}) ?>";
             }
         ];
     }
