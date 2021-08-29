@@ -18,7 +18,12 @@ class Router
                 Application::singleton()->Request = $request;
 
                 $Dispatcher = new Dispatcher();
-                return $Dispatcher($request, $Route);
+                return $Dispatcher($request, $Route)->then(function ($response) use ($request) {
+                    $statusCode = $response->getStatusCode();
+                    if ($statusCode < 400) {
+                        $request->flushPrevious();
+                    }
+                });
             }
             
         } catch (\Throwable $e) {

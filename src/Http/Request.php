@@ -196,6 +196,11 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
         return $this;
     }
 
+    public function flushPrevious()
+    {
+        $this->Session()->flash('input', null);
+    }
+
     public function redirectBack($statusCode = 302)
     {
         $location = '/';

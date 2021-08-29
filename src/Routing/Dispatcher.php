@@ -55,9 +55,6 @@ class Dispatcher
             }
 
             if (!($response instanceof Promise\PromiseInterface) && !($response instanceof ReactResponse)) {
-
-                var_dump($response);
-
                 $response = Response::make($response, 200, ['Content-Type' => 'application/json']);
             }
         }
