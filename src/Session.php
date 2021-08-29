@@ -39,6 +39,17 @@ class Session
         return $this;
     }
 
+    public function flashed(string $name = null): mixed
+    {
+        $flashed = $this->get(self::SPECIAL_KEYS['flash']) ?? [];
+
+        if ($name) {
+            return $flashed[$name] ?? null;
+        }
+
+        return $flashed;
+    }
+
     public function get(string $name, $default = null)
     {
         if (in_array($name, array_keys(self::SPECIAL_KEYS))) {
@@ -46,7 +57,7 @@ class Session
         }
 
         if ($name !== self::SPECIAL_KEYS['flash']) {
-            $flashed = $this->get(self::SPECIAL_KEYS['flash']) ?? [];
+            $flashed = $this->flashed();
 
             if (isset($flashed[$name])) {
                 $value = $flashed[$name];
@@ -84,10 +95,11 @@ class Session
     public function prev(string $name)
     {
         $value = '';
-        if ($flashed = $this->get(self::SPECIAL_KEYS['flash'])) {
+        if ($flashed = $this->flashed()) {
             if (isset($flashed['input']) && isset($flashed['input'][$name])) {
                 $value = $flashed['input'][$name];
                 unset($flashed['input'][$name]);
+                $this->set(self::SPECIAL_KEYS['flash'], $flashed);
             }
         }
 

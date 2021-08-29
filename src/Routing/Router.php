@@ -11,7 +11,7 @@ use React\Promise;
 
 class Router
 {
-    public function __invoke(Request $request): Promise\PromiseInterface
+    public static function dispatch(Request $request): Promise\PromiseInterface
     {
         try {
             if ($Route = static::resolve($request)) {
@@ -19,7 +19,15 @@ class Router
 
                 $Dispatcher = new Dispatcher();
 
-                return $Dispatcher($request, $Route);
+                return $Dispatcher($request, $Route)->then(function (Response $response) use ($request) {
+                    $statusCode = $response->getStatusCode();
+                    
+                    if ($statusCode > 299 && $statusCode < 500 && $request->hasInput() && $request->hasErrors()) {
+                        $request->flashPrevious();
+                    }
+
+                    return $response;
+                });
             }
             
         } catch (\Throwable $e) {

@@ -186,7 +186,13 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
     public function flashPrevious(array $exclude = [])
     {
         $alwaysForget = ['_csrf', 'password', 'password_confirm', 'ssn'];
+
+        if ($errors = $this->Session()->flashed('errors')) {
+            $exclude = array_merge($exclude, $errors);
+        }
+
         $input = array_diff_key($this->input(), $exclude);
+
         foreach ($alwaysForget as $key) {
             if (isset($input[$key])) unset($input[$key]);
         }
@@ -201,6 +207,16 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
         $this->Session()->flash('input', null);
 
         return $this;
+    }
+
+    public function hasErrors(): bool
+    {
+        return !empty($this->Session()->flashed('errors'));
+    }
+
+    public function hasInput()
+    {
+        return !empty($this->input());
     }
 
     public function redirectBack($statusCode = 302)
