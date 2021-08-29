@@ -92,9 +92,9 @@ class Session
         return isset($contents[$name]);
     }
 
-    public function prev(string $name)
+    public function prev(string $name, $default = '')
     {
-        $value = '';
+        $value = $default;
         if ($flashed = $this->flashed()) {
             if (isset($flashed['input']) && isset($flashed['input'][$name])) {
                 $value = $flashed['input'][$name];

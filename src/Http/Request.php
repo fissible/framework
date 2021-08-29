@@ -78,14 +78,14 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
         return $this->request->getUploadedFiles();
     }
 
-    public function get(?string $key = null): array
+    public function get(?string $key = null, mixed $default = null): mixed
     {
         if (!isset($this->GET)) {
             $this->GET = $this->request->getQueryParams();
         }
 
         if ($key) {
-            return $this->GET[$key];
+            return $this->GET[$key] ?? $default;
         }
 
         return $this->GET;
@@ -128,7 +128,7 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
         return file_exists($file);
     }
 
-    public function post(?string $key = null): mixed
+    public function post(?string $key = null, mixed $default = null): mixed
     {
         if (!isset($this->POST)) {
             $this->POST = [];
@@ -141,7 +141,7 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
         }
 
         if ($key) {
-            return $this->POST[$key];
+            return $this->POST[$key] ?? $default;
         }
 
         return $this->POST;

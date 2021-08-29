@@ -166,7 +166,7 @@ class Application
     public function getPath(string $subpath = '')
     {
         $subpath = trim ($subpath, '/');
-        $root = defined('ROOT_PATH') ? ROOT_PATH : $this->config()->get('ROOT_PATH');
+        $root = defined('ROOT_PATH') ? ROOT_PATH : $this->config()->get('ROOT_PATH') ?? dirname(dirname(dirname(__DIR__)));
 
         if (strlen($root) > 0) {
             return $root . '/' . $subpath;

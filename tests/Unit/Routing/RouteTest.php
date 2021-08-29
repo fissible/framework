@@ -5,8 +5,10 @@ namespace Tests\Unit\Routing;
 use Fissible\Framework\Collection;
 use Fissible\Framework\Exceptions\Http\MethodNotAllowedError;
 use Fissible\Framework\Exceptions\Http\NotFoundError;
+use Fissible\Framework\Http\Request;
 use Fissible\Framework\Routing\Route;
 use Fissible\Framework\Routing\RouteParameter;
+use React\Http\Message\ServerRequest;
 use Tests\TestCase;
 
 class RouteTest extends TestCase
@@ -116,10 +118,14 @@ class RouteTest extends TestCase
         Route::get('/page/{pageId}/user/{userId?}', ['Controller', 'method']);
         Route::get('/business/{businessId}/employee/{employeeId}', ['Controller', 'method']);
 
-        $Route1 = Route::lookup('GET', '/products/Fish-Tank');
-        $Route2 = Route::lookup('GET', '/page/24/user/14');
-        $Route3 = Route::lookup('GET', '/page/25/user');
-        $Route4 = Route::lookup('GET', '/business/45/employee/21');
+        $Request = new Request(new ServerRequest('GET', '/products/Fish-Tank'));
+        $Route1 = Route::lookup('GET', $Request->getUri());
+        $Request = new Request(new ServerRequest('GET', '/page/24/user/14'));
+        $Route2 = Route::lookup('GET', $Request->getUri());
+        $Request = new Request(new ServerRequest('GET', '/page/25/user'));
+        $Route3 = Route::lookup('GET', $Request->getUri());
+        $Request = new Request(new ServerRequest('GET', '/business/45/employee/21'));
+        $Route4 = Route::lookup('GET', $Request->getUri());
         
         $this->assertEquals('/products/{name}', $Route1->getUri());
         $this->assertEquals('/page/{pageId}/user/{userId?}', $Route2->getUri());
@@ -134,7 +140,8 @@ class RouteTest extends TestCase
 
         $this->expectException(NotFoundError::class);
 
-        Route::lookup('GET', '/business/45/employee');
+        $Request = new Request(new ServerRequest('GET', '/business/45/employee'));
+        Route::lookup('GET', $Request->getUri());
     }
 
     public function testLookupMethodNotAllowed()
@@ -144,7 +151,8 @@ class RouteTest extends TestCase
 
         $this->expectException(MethodNotAllowedError::class);
 
-        Route::lookup('POST', '/business/45/employee');
+        $Request = new Request(new ServerRequest('GET', '/business/45/employee'));
+        Route::lookup('POST', $Request->getUri());
     }
 
     public function tearDown(): void

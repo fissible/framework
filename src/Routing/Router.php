@@ -39,9 +39,6 @@ class Router
 
     public static function resolve(Request $request): ?Route
     {
-        $requestMethod = $request->getMethod();
-        $requestTarget = $request->getRequestTarget();
-
-        return Route::lookup($requestMethod, $requestTarget);
+        return Route::lookup($request->getMethod(), $request->getUri());
     }
 }

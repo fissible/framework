@@ -9,6 +9,7 @@ use Fissible\Framework\Exceptions\Http\NotFoundError;
 use Fissible\Framework\Http\Request;
 use Fissible\Framework\Str;
 use Illuminate\Contracts\View\View;
+use Psr\Http\Message\UriInterface;
 use React\Http\Message\Response;
 use React\Promise;
 
@@ -50,8 +51,10 @@ class Route
         static::registerRoute('GET', $uri, $action, $Guard);
     }
 
-    public static function lookup(string $method, string $url)
+    public static function lookup(string $method, UriInterface $uri)
     {
+        $url = $uri->getPath();
+
         $Matches = static::$Table->filter(function (Route $Route) use ($url) {
             return $Route->matches($url);
         });
