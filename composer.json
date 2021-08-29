@@ -1,0 +1,39 @@
+{
+    "name": "fissible/framework",
+    "description": "A ReactPHP-based API server framework.",
+    "type": "library",
+    "require": {
+        "react/event-loop": "^1.2",
+        "react/http": "^1.5",
+        "react/stream": "^1.2",
+        "react/promise": "^2.8",
+        "nesbot/carbon": "^2.51",
+        "clue/stdio-react": "^2.4",
+        "firebase/php-jwt": "^5.4",
+        "clue/reactphp-sqlite": "^1.1",
+        "react/mysql": "^0.5.5",
+        "swiftmailer/swiftmailer": "^6.2",
+        "react/child-process": "^0.6.3",
+        "react/cache": "^1.1",
+        "mockery/mockery": "^1.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "10.0.x-dev",
+        "phpstan/phpstan": "0.12.x-dev"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Fissible\\Framework\\": "src/",
+            "Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Allen McCabe",
+            "email": "allenmccabe@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
