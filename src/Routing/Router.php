@@ -2,7 +2,6 @@
 
 namespace Fissible\Framework\Routing;
 
-use Fissible\Framework\Application;
 use Fissible\Framework\Facades\Log;
 use Fissible\Framework\Http\Request;
 use Fissible\Framework\Routing\Route;

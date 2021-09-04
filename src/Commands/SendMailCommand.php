@@ -25,9 +25,10 @@ final class SendMailCommand extends Command
             throw new \Exception('Database not configured.');
         }
 
-        return Email::find($EmailId)->then(function ($Email) use ($EmailId) {
+        return Email::find($EmailId)->then(function ($Email) use ($app, $EmailId) {
             if ($Email) {
-                $MailService = new MailService();
+                $MailService = $app->resolve(MailService::class);
+
                 if ($MailService->send($Email, $Email->to_email, $Email->to_name) > 0) {
                     echo "[info] Sending email to " . $Email->to_email . '...' . PHP_EOL;
                     $Email->sent_at = new \DateTime();

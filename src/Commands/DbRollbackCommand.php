@@ -24,8 +24,8 @@ final class DbRollbackCommand extends Command
             throw new \Exception('Database not configured.');
         }
 
-        return Query::table('migrations')->orderBy('batch', 'desc')->get()->then(function ($Migrations) use ($batches) {
-            $MigrationsDirectory = new Directory(dirname(dirname(__DIR__)) . '/migrations');
+        return Query::table('migrations')->orderBy('batch', 'desc')->get()->then(function ($Migrations) use ($app, $batches) {
+            $MigrationsDirectory = new Directory($app->getMigrationsDirectoryPath($app->config()->get('ROOT_PATH')));
             
             if ($Migrations->empty()) {
                 $this->stdio()->write('Nothing to roll back.' . PHP_EOL);

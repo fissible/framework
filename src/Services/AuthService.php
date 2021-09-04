@@ -14,6 +14,9 @@ class AuthService
 
     public static function authenticate(User $User, string $password): bool
     {
+        if (is_null($User->password)) {
+            throw new \InvalidArgumentException('User not verified.');
+        }
         return static::verify($password, $User->password);
     }
 

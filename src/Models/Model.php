@@ -311,7 +311,10 @@ class Model implements \JsonSerializable, \Serializable
             break;
             case 'json':
             case 'array':
-                return json_decode($value);
+                if (is_string($value)) {
+                    return json_decode($value);
+                }
+                return (array) $value;
             break;
             case 'date':
                 $value = $this->asDate($value);
@@ -370,7 +373,9 @@ class Model implements \JsonSerializable, \Serializable
             throw new \InvalidArgumentException('Data includes primary key value.');
         }
 
-        return static::newQuery()->insert($this->uncastAttributes($attributes), static::CREATED_FIELD)->then(function ($primaryKey) {
+        $attributes = $this->uncastAttributes($attributes);
+
+        return static::newQuery()->insert($attributes, static::CREATED_FIELD)->then(function ($primaryKey) {
             if ($primaryKey !== null) {
                 if (static::$primaryKeyType === 'int') {
                     return intval($primaryKey);
@@ -623,6 +628,51 @@ class Model implements \JsonSerializable, \Serializable
         return $this;
     }
 
+    protected function uncastAttribute(string $name, $value)
+    {
+        $castType = null;
+        $format = null;
+        if (isset(static::$casts[$name])) {
+            $castType = static::$casts[$name];
+            if (false !== ($pos = strpos($castType, ':'))) {
+                $format = substr($castType, $pos + 1);
+            }
+        }
+
+        if (is_null($value) && in_array($castType, static::$castTypes)) {
+            return $value;
+        }
+
+        switch ($castType) {
+            case 'json':
+            case 'array':
+                return json_encode($value);
+                break;
+            case 'date':
+                if ($format) {
+                    $value = $value->format($value);
+                } else {
+                    $value = $value->format('Y-m-d');
+                }
+                return $value;
+                break;
+            case 'datetime':
+                if ($format) {
+                    $value = $value->format($value);
+                } else {
+                    $value = $value->format(static::$dateFormat);
+                }
+                return $value;
+                break;
+        }
+
+        if (!is_null($value) && in_array($name, $this->getDateFields())) {
+            return $value->format(static::$dateFormat);
+        }
+
+        return $value;
+    }
+
     /**
      * Prepare array of attributes for database storage.
      * 
@@ -631,18 +681,12 @@ class Model implements \JsonSerializable, \Serializable
     protected function uncastAttributes(array $attributes)
     {
         if (isset($attributes[0]) && is_array($attributes[0])) {
-            foreach ($this->getDateFields() as $field) {
-                foreach ($attributes as $key => $record) {
-                    if (isset($record[$field]) && $record[$field] instanceof \DateTime) {
-                        $attributes[$key][$field] = $record[$field]->format(static::$dateFormat);
-                    }
-                }
-            }
+            return array_map(function ($attributes) {
+                return $this->uncastAttributes($attributes);
+            }, $attributes);
         } else {
-            foreach ($this->getDateFields() as $field) {
-                if (isset($attributes[$field]) && $attributes[$field] instanceof \DateTime) {
-                    $attributes[$field] = $attributes[$field]->format(static::$dateFormat);
-                }
+            foreach ($attributes as $field => $value) {
+                $attributes[$field] = $this->uncastAttribute($field, $value);
             }
         }
 

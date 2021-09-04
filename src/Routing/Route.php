@@ -2,17 +2,13 @@
 
 namespace Fissible\Framework\Routing;
 
-use Fissible\Framework\Application;
 use Fissible\Framework\Collection;
 use Fissible\Framework\Exceptions\Http\MethodNotAllowedError;
 use Fissible\Framework\Exceptions\Http\NotFoundError;
 use Fissible\Framework\Http\Request;
 use Fissible\Framework\Str;
-use Illuminate\Contracts\View\View;
 use Psr\Http\Message\UriInterface;
-use React\Http\Message\Response;
 use React\Http\Message\ServerRequest;
-use React\Promise;
 
 class Route
 {

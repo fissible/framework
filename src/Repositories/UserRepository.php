@@ -8,6 +8,17 @@ use React\Promise;
 
 class UserRepository
 {
+    public static function count(array $criteria = [])
+    {
+        $Query = User::query();
+
+        if (!empty($criteria)) {
+            $Query->where($criteria);
+        }
+
+        return $Query->count();
+    }
+
     public static function get(array $criteria = [])
     {
         $Query = User::query();
@@ -37,6 +48,10 @@ class UserRepository
     public static function create(array $attributes): Promise\PromiseInterface
     {
         $attributes['verification_code'] = User::generateVerificationCode();
+
+        if (isset($attributes['password'])) {
+            $attributes['password'] = AuthService::hash($attributes['password']);
+        }
 
         return User::create($attributes);
     }
