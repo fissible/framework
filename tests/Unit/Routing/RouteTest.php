@@ -75,6 +75,42 @@ class RouteTest extends TestCase
         $this->assertEquals($expected, $ProductParameters);
     }
 
+    public function testHeirarchy()
+    {
+        Route::get('/', function () {});
+        Route::get('/products', function () {});
+        Route::get('/products/{id}', function ($id) {});
+        Route::get('/products/{id}/related', function ($id) {});
+        Route::get('/products/{id}/related/{related_id}', function ($id, $related_id) {});
+
+        $Request = new Request(new ServerRequest('GET', '/products/17/related/88'));
+        $Route = Route::lookup('GET', $Request->getUri());
+
+        $this->assertEquals(Route::class, get_debug_type($Route));
+
+        $Heirarchy = $Route->heirarchy();
+
+        $Parent = $Heirarchy->pop();
+
+        $this->assertEquals(Route::class, get_debug_type($Parent));
+        $this->assertEquals('/products/17/related', $Parent->url);
+
+        $Parent = $Heirarchy->pop();
+
+        $this->assertEquals(Route::class, get_debug_type($Parent));
+        $this->assertEquals('/products/17', $Parent->url);
+
+        $Parent = $Heirarchy->pop();
+
+        $this->assertEquals(Route::class, get_debug_type($Parent));
+        $this->assertEquals('/products', $Parent->url);
+
+        $Parent = $Heirarchy->pop();
+
+        $this->assertEquals(Route::class, get_debug_type($Parent));
+        $this->assertEquals('/', $Parent->url);
+    }
+
     public function testMatches()
     {
         $action = ['Controller', 'method'];

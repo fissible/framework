@@ -40,17 +40,6 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
     {
         $this->request = $this->proxied = $request;
         static::$proxiedClass = get_debug_type($request);
-
-        if (!$this->isFile()) {
-            if (isset($this->attributes[SessionMiddleware::ATTRIBUTE_NAME])) {
-                $current = $request->getRequestTarget();
-
-                if ($current !== $this->Session()->get('current')) {
-                    $this->Session()->set('previous', $this->Session()->get('current'));
-                }
-                $this->Session()->set('current', $current);
-            }
-        }
     }
 
     public static function redirect(string $location, int $statusCode = 302)
@@ -183,6 +172,18 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
         return $this;
     }
 
+    public function setCurrentLocation()
+    {
+        // Set the current/previous URLs
+        if (!$this->isFile() && $this->Session()->isActive()) {
+            $current = $this->getRequestTarget();
+            if ($current !== $this->Session()->get('current')) {
+                $this->Session()->set('previous', $this->Session()->get('current'));
+            }
+            $this->Session()->set('current', $current);
+        }
+    }
+
     public function flashPrevious(array $exclude = [])
     {
         $alwaysForget = ['_csrf', 'password', 'password_confirm', 'ssn'];
@@ -248,7 +249,7 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
         return $this->redirect($default);
     }
 
-    public function Session()
+    public function Session(): Session
     {
         return new Session($this->request->getAttribute(SessionMiddleware::ATTRIBUTE_NAME));
     }

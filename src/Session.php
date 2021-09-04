@@ -39,6 +39,19 @@ class Session
         return $this;
     }
 
+    public function flashPush(string $name, $value)
+    {
+        $contents = $this->get(self::SPECIAL_KEYS['flash']) ?? [];
+        if (!isset($contents[$name])) {
+            $contents[$name] = [];
+        }
+        $contents[$name][] = $value;
+
+        $this->set(self::SPECIAL_KEYS['flash'], $contents);
+
+        return $this;
+    }
+
     public function flashed(string $name = null): mixed
     {
         $flashed = $this->get(self::SPECIAL_KEYS['flash']) ?? [];

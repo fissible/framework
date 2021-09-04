@@ -11,11 +11,14 @@ use Fissible\Framework\Str;
 use Illuminate\Contracts\View\View;
 use Psr\Http\Message\UriInterface;
 use React\Http\Message\Response;
+use React\Http\Message\ServerRequest;
 use React\Promise;
 
 class Route
 {
     public static Collection $Table;
+
+    public string $url;
 
     private Collection $Parameters;
 
@@ -41,14 +44,14 @@ class Route
         unset(static::$globalMiddleware);
     }
 
-    public static function delete(string $uri, callable|array $action, ?Guard $Guard = null)
+    public static function delete(string $uri, callable|array $action, ?Guard $Guard = null): Route
     {
-        static::registerRoute('DELETE', $uri, $action, $Guard);
+        return static::registerRoute('DELETE', $uri, $action, $Guard);
     }
 
-    public static function get(string $uri, callable|array $action, ?Guard $Guard = null)
+    public static function get(string $uri, callable|array $action, ?Guard $Guard = null): Route
     {
-        static::registerRoute('GET', $uri, $action, $Guard);
+        return static::registerRoute('GET', $uri, $action, $Guard);
     }
 
     public static function lookup(string $method, UriInterface $uri)
@@ -74,7 +77,7 @@ class Route
             throw new MethodNotAllowedError($method, $url);
         }
 
-        return $Matches->sort(function (Route $RouteA, Route $RouteB) use ($url) {
+        $Route = $Matches->sort(function (Route $RouteA, Route $RouteB) use ($url) {
             $compareA = Str::before($RouteA->getUri(), '{') ?: $RouteA->getUri();
             $compareB = Str::before($RouteB->getUri(), '{') ?: $RouteB->getUri();
             $levA = levenshtein($url, $compareA);
@@ -85,68 +88,32 @@ class Route
             }
             return $levB > $levA ? -1 : 1;
         })->first();
+
+        if ($Route) {
+            $Route->url = $url;
+        }
+
+        return $Route;
     }
 
-    public static function patch(string $uri, callable|array $action, ?Guard $Guard = null)
+    public static function patch(string $uri, callable|array $action, ?Guard $Guard = null): Route
     {
-        static::registerRoute('PATCH', $uri, $action, $Guard);
+        return static::registerRoute('PATCH', $uri, $action, $Guard);
     }
 
-    public static function post(string $uri, callable|array $action, ?Guard $Guard = null)
+    public static function post(string $uri, callable|array $action, ?Guard $Guard = null): Route
     {
-        static::registerRoute('POST', $uri, $action, $Guard);
+        return static::registerRoute('POST', $uri, $action, $Guard);
     }
 
-    public static function put(string $uri, callable|array $action, ?Guard $Guard = null)
+    public static function put(string $uri, callable|array $action, ?Guard $Guard = null): Route
     {
-        static::registerRoute('PUT', $uri, $action, $Guard);
+        return static::registerRoute('PUT', $uri, $action, $Guard);
     }
 
     public static function table(): Collection
     {
         return static::$Table;
-    }
-
-    public function dispatch(Request $request, array $parameters)
-    {
-        $action = $this->getAction();
-        $response = null;
-
-        if (is_array($action)) {
-            $Controller = $action[0];
-            $Controller = new $Controller();
-            $response = call_user_func_array([$Controller, $action[1]], $parameters);
-        } elseif (is_callable($action)) {
-            $response = $action(...$parameters);
-        }
-
-        if ($response !== null) {
-
-            if (is_string($response)) {
-                $response = new Response(200, ['Content-Type' => 'text/html'], $response);
-            }
-
-            if ($response instanceof View) {
-                $response = new Response(200, ['Content-Type' => 'text/html'], $response->render());
-            }
-
-            if ($response instanceof Response) {
-                $response = Promise\resolve($response);
-            }
-            
-            if ($response instanceof Promise\PromiseInterface) {
-                return $response->then(function ($response) {
-                    if ($response instanceof View) {
-                        return new Response(200, ['Content-Type' => 'text/html'], $response->render());
-                    }
-                    return $response;
-                });
-            }
-
-            return Promise\resolve(new Response(204, ['Content-Type' => 'application/json'], $response));
-        }
-
-        return Promise\resolve(new Response(404, ['Content-Type' => 'application/json'], 'Not found'));
     }
 
     public function getAction(): array|callable
@@ -221,6 +188,45 @@ class Route
         return $this->paramCount() > 0;
     }
 
+    public function heirarchy()
+    {
+        $routes = [];
+        $parts = explode('/', $this->url);
+        
+        array_pop($parts);
+
+        if (count($parts) === 1 && strlen($parts[0]) === 0) {
+            $parent = '/';
+        } else {
+            $parent = implode('/', $parts);
+        }
+
+        $Request = new Request(new ServerRequest('GET', $parent));
+        $uri = $Request->getUri();
+
+        try {
+            while ($Route = static::lookup('GET', $uri)) {
+                $Route->url = $parent;
+                $routes[$parent] = $Route;
+
+                array_pop($parts);
+
+                if (count($parts) === 1 && strlen($parts[0]) === 0) {
+                    $parent = '/';
+                } else {
+                    $parent = implode('/', $parts);
+                }
+
+                $Request = new Request(new ServerRequest('GET', $parent));
+                $uri = $Request->getUri();
+            }
+        } catch (NotFoundError $e) {
+            //
+        }
+
+        return new Collection(array_reverse($routes));
+    }
+
     public function matches(string $url): bool
     {
         if ($this->getUri() === $url && !$this->hasParams()) {
@@ -242,7 +248,7 @@ class Route
             return false;
         }
 
-        $Parameters->each(function (RouteParameter $Parameter) use ($matches) {
+        $Parameters->each(function (RouteParameter $Parameter) use ($matches, $url) {
             if ($Parameter->isRequired() && !isset($matches[$Parameter->getName()])) {
                 return false;
             }
@@ -328,7 +334,7 @@ class Route
         return $Parameters;
     }
 
-    private static function registerRoute(string $method, string $uri, callable|array $action, ?Guard $Guard = null)
+    private static function registerRoute(string $method, string $uri, callable|array $action, ?Guard $Guard = null): Route
     {
         if (!isset(static::$Table)) {
             static::$Table = new Collection();
@@ -337,7 +343,10 @@ class Route
         $method = strtoupper($method);
         $id = $method . ':' . $uri;
         $middleware = static::$globalMiddleware ?? [];
+        $Route = new static($method, $uri, $action, $Guard, $middleware);
 
-        static::$Table->set($id, new static($method, $uri, $action, $Guard, $middleware));
+        static::$Table->set($id, $Route);
+
+        return $Route;
     }
 }

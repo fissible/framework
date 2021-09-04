@@ -223,23 +223,24 @@ class Validator
             return new Rule('custom', $rule);
         }
 
-
         if (!is_string($rule)) {
             throw new \InvalidArgumentException('Invalid rule.');
         }
 
+        $params = [];
+
         if (false !== strpos($rule, ':')) {
             list($ruleName, $params) = explode(':', $rule, 2);
-            $params = explode(',', $params);
+            if ($ruleName !== 'regex') {
+                $params = explode(',', $params);
+            } else {
+                $params = [$params];
+            }
         } else {
             $ruleName = $rule;
-            $params = [];
         }
 
-
         $params = array_filter($params);
-
-
         $ruleNameParts = explode('-', $ruleName);
         $ruleNameParts = array_map(function ($part) {
             return ucfirst(strtolower($part));

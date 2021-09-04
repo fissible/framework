@@ -2,6 +2,7 @@
 
 namespace Fissible\Framework\Models;
 
+use Carbon\Carbon;
 use Fissible\Framework\Database\Query;
 use Fissible\Framework\Exceptions\ModelException;
 use React\Promise;
@@ -551,7 +552,7 @@ class Model implements \JsonSerializable, \Serializable
      */
     protected function asDate($value): \DateTime
     {
-        return $this->asDatetime($value)->setTime(0, 0);
+        return new Carbon($this->asDatetime($value)->setTime(0, 0));
     }
 
     /**
@@ -561,30 +562,30 @@ class Model implements \JsonSerializable, \Serializable
     protected function asDatetime($value): \DateTime
     {
         if ($value instanceof \DateTime) {
-            return $value;
+            return new Carbon($value);
         }
 
         if (is_numeric($value)) {
-            return \DateTime::createFromFormat('U', (string) $value);
+            return new Carbon(\DateTime::createFromFormat('U', (string) $value));
         }
 
         // Y-m-d
         if (is_string($value) && preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $value)) {
-            return (\DateTime::createFromFormat('Y-m-d', $value))->setTime(0, 0);
+            return new Carbon(\DateTime::createFromFormat('Y-m-d', $value)->setTime(0, 0));
         }
 
         // Y-m-d H:i:s
         if (is_string($value) && preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2}) (\d{2}):(\d{2}):(\d{2})$/', $value)) {
-            return \DateTime::createFromFormat('Y-m-d H:i:s', $value);
+            return new Carbon(\DateTime::createFromFormat('Y-m-d H:i:s', $value));
         }
 
         if (static::$dateFormat) {
             if (false !== ($dateTime = \DateTime::createFromFormat(static::$dateFormat, (string) $value))) {
-                return $dateTime;
+                return new Carbon($dateTime);
             }
         }
         
-        return new \DateTime((string) $value);
+        return new Carbon($value);
     }
 
     protected function getDateFields(): array

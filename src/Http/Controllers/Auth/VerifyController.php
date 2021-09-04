@@ -18,7 +18,7 @@ class VerifyController extends Controller
 
         $validated = $request->validate([
             'verification_code' => ['required', 'exists:users,verification_code'],
-            'password' => ['required', 'string', 'regex:/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{12,}$/']
+            'password' => ['required', 'string', 'regex:/^(?=.*\d)(?=.*[a-z]).{12,}$/i']
         ], [
             'password.regex' => 'Password must at least 12 characters and include a number.'
         ]);

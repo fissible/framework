@@ -32,6 +32,8 @@ class Application
 
     protected Collection $Middlewares;
 
+    protected array $providers;
+
     protected bool $inCommand = false;
 
     private ServiceContainer $Container;
@@ -39,7 +41,7 @@ class Application
     protected function __construct(bool $inCommand = false, array $config = [])
     {
         $this->inCommand = $inCommand;
-        $this->Container = new ServiceContainer();
+        $this->Container = new ServiceContainer($this);
         $this->configure($config);
     }
 
@@ -108,6 +110,11 @@ class Application
     public function bindInstance(string $class, mixed $instance): void
     {
         $this->Container->bindInstance($class, $instance);
+    }
+
+    public function bootProviders(): void
+    {
+        $this->Container->bootProviders($this->providers);
     }
 
     /**
@@ -292,15 +299,48 @@ class Application
     }
 
     /**
+     * @param string $class
+     * @param mixed $provider
+     * @return void
+     */
+    public function makes(string $class, callable $provider)
+    {
+        return $this->Container->makes($class, $provider);
+    }
+
+    /**
      * Register a middleware.
      */
-    public function registerMiddleware(string $name, string $middleware): void
+    public function registerMiddleware(string|array $name, ?string $middleware = null): void
     {
         if (!isset($this->Middlewares)) {
             $this->Middlewares = new Collection();
         }
 
-        $this->Middlewares->set($name, $middleware);
+        if (is_array($name)) {
+            foreach ($name as $service => $middlewareClass) {
+                $this->Middlewares->set($service, $middlewareClass);
+            }
+        } else {
+            $this->Middlewares->set($name, $middleware);
+        }
+    }
+
+    public function registerProviders(array $providers): void
+    {
+        $this->providers = $providers;
+        $this->Container->registerProviders($this->providers);
+    }
+
+    /**
+     * Resolve an instance of class.
+     * 
+     * @param string $class
+     * @return mixed
+     */
+    public function resolve(string $class): mixed
+    {
+        return $this->Container->make($class);
     }
 
     /**

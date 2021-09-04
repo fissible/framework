@@ -8,6 +8,17 @@ use React\Promise;
 
 class UserRepository
 {
+    public static function get(array $criteria = [])
+    {
+        $Query = User::query();
+
+        if (!empty($criteria)) {
+            $Query->where($criteria);
+        }
+
+        return $Query->get();
+    }
+
     public static function getById(int|string $id): Promise\PromiseInterface
     {
         return User::find($id);

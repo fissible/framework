@@ -15,8 +15,6 @@ class Router
     {
         try {
             if ($Route = static::resolve($request)) {
-                Application::singleton()->Request = $request;
-
                 $Dispatcher = new Dispatcher();
 
                 return $Dispatcher($request, $Route)->then(function (Response $response) use ($request) {

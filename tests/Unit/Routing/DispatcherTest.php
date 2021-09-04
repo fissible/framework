@@ -31,31 +31,31 @@ class DispatcherTest extends TestCase
         $this->assertEquals('action', $ReflectionParameter->name);
 
         // array
-        $action = [Controller::class];
+        $action = [TestController::class];
         [$callable, $Reflection] = $Dispatcher->getCallableAndReflection($action);
         $ReflectionParameter = $Reflection->getParameters()[0];
 
-        $this->assertEquals([new Controller(), '__invoke'], $callable);
+        $this->assertEquals([new TestController(), '__invoke'], $callable);
         $this->assertEquals('request', $ReflectionParameter->name);
 
         // instance
-        $action = [Controller::class, '__invoke'];
+        $action = [TestController::class, '__invoke'];
         [$callable, $Reflection] = $Dispatcher->getCallableAndReflection($action);
         $ReflectionParameter = $Reflection->getParameters()[0];
 
-        $this->assertEquals([new Controller(), '__invoke'], $callable);
+        $this->assertEquals([new TestController(), '__invoke'], $callable);
         $this->assertEquals('request', $ReflectionParameter->name);
 
         // instance array
-        $action = [new Controller(), '__invoke'];
+        $action = [new TestController(), '__invoke'];
         [$callable, $Reflection] = $Dispatcher->getCallableAndReflection($action);
         $ReflectionParameter = $Reflection->getParameters()[0];
 
-        $this->assertEquals([new Controller(), '__invoke'], $callable);
+        $this->assertEquals([new TestController(), '__invoke'], $callable);
         $this->assertEquals('request', $ReflectionParameter->name);
 
         // instance
-        $action = new Controller();
+        $action = new TestController();
         [$callable, $Reflection] = $Dispatcher->getCallableAndReflection($action);
         $ReflectionParameter = $Reflection->getParameters()[0];
 

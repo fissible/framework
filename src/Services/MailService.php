@@ -2,7 +2,6 @@
 
 namespace Fissible\Framework\Services;
 
-use Fissible\Framework\Application;
 use Fissible\Framework\Models\Email;
 use Fissible\Framework\Traits\HasConfig;
 
@@ -10,12 +9,12 @@ class MailService
 {
     use HasConfig;
 
-    public function __construct()
+    public function __construct(array|\stdClass|null $config = null)
     {
-        $this->setConfig(Application::singleton()->config()->mail);
+        $this->setConfig($config);
     }
 
-    public function send(Email $Email, string $to_email, string $to_name = null)
+    public function send(Email $Email, string $to_email, string $to_name = null): int
     {
         $message = new \Swift_Message($Email->subject);
         $message->setFrom([$Email->from_email => $Email->from_name])

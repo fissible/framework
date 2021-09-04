@@ -5,10 +5,13 @@ namespace Fissible\Framework\Services;
 use Fissible\Framework\Application;
 use Fissible\Framework\Auth\Jwt;
 use Fissible\Framework\Models\User;
+use Fissible\Framework\Session;
 use Psr\Http\Message\ServerRequestInterface;
 
 class AuthService
 {
+    public static string $redirectTo = '/';
+
     public static function authenticate(User $User, string $password): bool
     {
         return static::verify($password, $User->password);
@@ -26,6 +29,16 @@ class AuthService
     public static function hash(string $data): string
     {
         return password_hash($data, PASSWORD_DEFAULT);
+    }
+
+    public static function login(User $User, Session $Session)
+    {
+        if (!$User->verified_at) {
+            throw new \Exception('User email unverified.');
+        }
+
+        $Session->set('user_id', $User->id);
+        $Session->set('User', $User);
     }
 
     public static function createToken(User $User, int $lifetimeMinutes = null)
