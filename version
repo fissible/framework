@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-git describe --abbrev=0
+git tag --sort=committerdate | tail -1
