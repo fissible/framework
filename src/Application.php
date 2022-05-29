@@ -3,6 +3,7 @@
 namespace Fissible\Framework;
 
 use Fissible\Framework\Attr\ConfigAttribute;
+use Fissible\Framework\Commands;
 use Fissible\Framework\Config;
 use Fissible\Framework\Database\Drivers\Driver as DatabaseDriver;
 use Fissible\Framework\Database\Query;
@@ -28,7 +29,7 @@ class Application
 
     protected static Application $instance;
 
-    protected static array $commands;
+    protected static array $commands = [];
 
     protected Collection $Middlewares;
 
@@ -41,27 +42,47 @@ class Application
     protected function __construct(bool $inCommand = false, array $config = [])
     {
         $this->inCommand = $inCommand;
+
+        $this->bindCommand(Commands\InstallCommand::class);
+        $this->bindCommand(Commands\MakeMigrationCommand::class);
+        $this->bindCommand(Commands\DbMigrateCommand::class);
+        $this->bindCommand(Commands\DbRollbackCommand::class);
+
         $this->Container = new ServiceContainer($this);
         $this->configure($config);
     }
 
     /**
      * Output usage information for registered Application commands.
+     * 
+     * @param array $arguments
      */
-    public static function commandHelp()
+    public static function commandHelp(array $arguments = [])
     {
-        echo 'Available commands:' . PHP_EOL;
-        foreach (static::$commands as $name => $command) {
-            echo "\t" . $name;
-            if (isset($command->title)) {
-                echo $command->title . PHP_EOL;
+        if (count($arguments) > 0) {
+            $name = reset($arguments);
+            if (isset(static::$commands[$name])) {
+                $command = new static::$commands[$name];
+                echo $command->help() . "\n";
+            } else {
+                printf("Command \"%s\" not found.\n", $name);
             }
-            if (isset($command->description)) {
-                echo ' - ' . $command->description . PHP_EOL;
+        } else {
+            echo 'Usage: ' . SCRIPT_NAME . ' [options] [command]' . PHP_EOL;
+            echo '   -h [command]  Print this usage statement.' . PHP_EOL . PHP_EOL;
+            echo 'Available commands:' . PHP_EOL;
+            foreach (static::$commands as $name => $command) {
+                // print_r([$command . '::summary', $name]);
+                /*
+                Array
+                (
+                    [0] => make:migration::summary
+                    [1] => Fissible\Framework\Commands\MakeMigrationCommand
+                )
+                */
+                echo call_user_func($command . '::summary', $name);
             }
             echo PHP_EOL;
-
-            // @todo - Command can return arguments
         }
 
         if (static::singleton(true)->db()) {
@@ -79,9 +100,19 @@ class Application
             throw new \InvalidArgumentException(sprintf('Command "%s" does not exist.', $name));
         }
 
-        $callback = static::$commands[$name];
+        $Command = static::$commands[$name];
+        $callback = new $Command($Application);
 
-        return $callback($Application, ...$arguments);
+        foreach ($arguments as $argument) {
+            if ($argument === '-h' || $argument === '--help') {
+                echo $callback->help() . "\n";
+                return \React\Promise\resolve(null);
+            }
+        }
+
+        $callback->init($arguments);
+
+        return $callback();
     }
 
     public static function singleton(bool $inCommand = false, array $config = []): static
@@ -93,13 +124,10 @@ class Application
         return static::$instance;
     }
 
-    public function bindCommand(string $name, callable $callback)
+    public function bindCommand(string $Command, string $name = null)
     {
-        if (!isset(static::$commands)) {
-            static::$commands = [];
-        }
-
-        static::$commands[$name] = $callback;
+        $name ??= $Command::$command;
+        static::$commands[$name] = $Command;
     }
 
     /**

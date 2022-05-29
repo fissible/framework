@@ -281,6 +281,11 @@ class Request extends \RingCentral\Psr7\MessageTrait implements ServerRequestInt
         return Promise\reject(new \Exception('User not logged in.'));
     }
 
+    public function uri(): string
+    {
+        return $this->getUri()->getPath();
+    }
+
     public function validate(array $rules, array $messages = []): Promise\PromiseInterface
     {
         $input = $this->input();

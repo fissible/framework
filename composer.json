@@ -16,7 +16,8 @@
         "react/child-process": "^0.6.3",
         "react/cache": "^1.1",
         "mockery/mockery": "^1.4",
-        "wyrihaximus/react-http-middleware-session": "^4.1"
+        "wyrihaximus/react-http-middleware-session": "^4.1",
+        "seld/cli-prompt": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "10.0.x-dev",

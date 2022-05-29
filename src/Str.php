@@ -165,7 +165,7 @@ class Str
      *
      * @param [type] $subject
      * @param [type] $prune
-     * @return void
+     * @return string
      */
     public static function lprune(string $subject, string $prune): string
     {
@@ -184,7 +184,7 @@ class Str
      *
      * @param [type] $subject
      * @param [type] $prune
-     * @return void
+     * @return string
      */
     public static function prune(string $subject, string $prune): string
     {
@@ -196,7 +196,7 @@ class Str
      *
      * @param [type] $subject
      * @param [type] $prune
-     * @return void
+     * @return string
      */
     public static function rprune(string $subject, string $prune): string
     {

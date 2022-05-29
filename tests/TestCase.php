@@ -27,7 +27,6 @@ class TestCase extends MockeryTestCase
     {
         if (!defined('ROOT_PATH')) {
             define('ROOT_PATH', dirname(__DIR__));
-            define('SCRIPT_NAME', __FILE__);
             define('CONFIG_PATH', static::app()->getConfigDirectoryPath());
         }
     }

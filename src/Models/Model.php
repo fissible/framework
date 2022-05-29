@@ -7,7 +7,7 @@ use Fissible\Framework\Database\Query;
 use Fissible\Framework\Exceptions\ModelException;
 use React\Promise;
 
-class Model implements \JsonSerializable, \Serializable
+class Model implements \JsonSerializable
 {
     protected static string $table;
 
@@ -319,14 +319,14 @@ class Model implements \JsonSerializable, \Serializable
             case 'date':
                 $value = $this->asDate($value);
                 if ($format) {
-                    $value = $value->format($value);
+                    $value = $value->format($format);
                 }
                 return $value;
             break;
             case 'datetime':
                 $value = $this->asDatetime($value);
                 if ($format) {
-                    $value = $value->format($value);
+                    $value = $value->format($format);
                 }
                 return $value;
             break;
@@ -398,17 +398,17 @@ class Model implements \JsonSerializable, \Serializable
         return static::newQuery()->insert($this->uncastAttributes($records), static::CREATED_FIELD);
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $attributes = [];
         foreach ($this->attributes as $key => $value) {
-            if (in_array($key, $this->getDateFields())) {
+            if (in_array($key, $this->getDateFields()) && $value instanceof \DateTimeInterface) {
                 $value = static::serializeDate($value);
             }
             $attributes[$key] = $value;
         }
         foreach ($this->dirty as $key => $value) {
-            if (in_array($key, $this->getDateFields())) {
+            if (in_array($key, $this->getDateFields()) && $value instanceof \DateTimeInterface) {
                 $value = static::serializeDate($value);
             }
             $attributes[$key] = $value;
@@ -480,40 +480,6 @@ class Model implements \JsonSerializable, \Serializable
                 return $this->refresh();
             });
         }
-    }
-
-    public function serialize()
-    {
-        $attributes = $this->attributes;
-        $dirty = $this->dirty;
-
-        foreach ($this->getDateFields() as $dateField) {
-            if (isset($attributes[$dateField]) && $attributes[$dateField] instanceof \DateTime) {
-                $attributes[$dateField] = static::serializeDate($attributes[$dateField]);
-            }
-            if (isset($dirty[$dateField]) && $dirty[$dateField] instanceof \DateTime) {
-                $dirty[$dateField] = static::serializeDate($dirty[$dateField]);
-            }
-        }
-
-        return serialize([$this->exists, $attributes, $dirty]);
-    }
-    
-    public function unserialize($data)
-    {
-        [$this->exists, $attributes, $dirty] = unserialize($data);
-
-        foreach ($this->dates as $dateField) {
-            if (isset($attributes[$dateField])) {
-                $attributes[$dateField] = $this->asDatetime($attributes[$dateField]);
-            }
-            if (isset($dirty[$dateField])) {
-                $dirty[$dateField] = $this->asDatetime($dirty[$dateField]);
-            }
-        }
-
-        $this->attributes = $attributes;
-        $this->dirty = $dirty;
     }
 
     /**
@@ -772,6 +738,40 @@ class Model implements \JsonSerializable, \Serializable
         }
 
         $this->setAttribute($name, $value);
+    }
+
+    public function __serialize()
+    {
+        $attributes = $this->attributes;
+        $dirty = $this->dirty;
+
+        foreach ($this->getDateFields() as $dateField) {
+            if (isset($attributes[$dateField]) && $attributes[$dateField] instanceof \DateTime) {
+                $attributes[$dateField] = static::serializeDate($attributes[$dateField]);
+            }
+            if (isset($dirty[$dateField]) && $dirty[$dateField] instanceof \DateTime) {
+                $dirty[$dateField] = static::serializeDate($dirty[$dateField]);
+            }
+        }
+
+        return [$this->exists, $attributes, $dirty];
+    }
+
+    public function __unserialize($data)
+    {
+        [$this->exists, $attributes, $dirty] = $data;
+
+        foreach ($this->dates as $dateField) {
+            if (isset($attributes[$dateField])) {
+                $attributes[$dateField] = $this->asDatetime($attributes[$dateField]);
+            }
+            if (isset($dirty[$dateField])) {
+                $dirty[$dateField] = $this->asDatetime($dirty[$dateField]);
+            }
+        }
+
+        $this->attributes = $attributes;
+        $this->dirty = $dirty;
     }
 
     private function attributeGetter(string $name)

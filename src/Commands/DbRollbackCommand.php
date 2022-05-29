@@ -10,22 +10,26 @@ use React\Promise\PromiseInterface;
 
 final class DbRollbackCommand extends Command
 {
+    public static string $command = 'db:rollback';
+
+    public static string $description = 'Run database SQL migration rollbacks.';
+
+    /**
+     * Command arguments configuration
+     */
+    public static $arguments = [
+        'batches' => []
+    ];
+
+
     public function run(): PromiseInterface
     {
-        $args = func_get_args();
-        $app = array_shift($args);
-        $batches = array_shift($args) ?? 0;
+        $this->requireDatabase();
 
-        if (!($app instanceof \Fissible\Framework\Application)) {
-            throw new \InvalidArgumentException();
-        }
+        $batches = $this->argument('batches') ?? 0;
 
-        if (!$app->db()) {
-            throw new \Exception('Database not configured.');
-        }
-
-        return Query::table('migrations')->orderBy('batch', 'desc')->get()->then(function ($Migrations) use ($app, $batches) {
-            $MigrationsDirectory = new Directory($app->getMigrationsDirectoryPath($app->config()->get('ROOT_PATH')));
+        return Query::table('migrations')->orderBy('batch', 'desc')->get()->then(function ($Migrations) use ($batches) {
+            $MigrationsDirectory = new Directory($this->app->getMigrationsDirectoryPath($this->app->config()->get('ROOT_PATH')));
             
             if ($Migrations->empty()) {
                 $this->stdio()->write('Nothing to roll back.' . PHP_EOL);

@@ -8,22 +8,18 @@ use React\Promise\PromiseInterface;
 
 final class DbMigrateCommand extends Command
 {
+    public static string $command = 'db:migrate';
+
+    public static string $description = 'Run database SQL migrations.';
+
+
     public function run(): PromiseInterface
     {
-        $args = func_get_args();
-        $app = array_shift($args);
+        $this->requireDatabase();
 
-        if (!($app instanceof \Fissible\Framework\Application)) {
-            throw new \InvalidArgumentException();
-        }
-
-        if (!$app->db()) {
-            throw new \Exception('Database not configured.');
-        }
-
-        return Query::table('migrations')->addSelect('max(batch) AS batch')->value('batch')->then(function ($batch) use ($app) {
+        return Query::table('migrations')->addSelect('max(batch) AS batch')->value('batch')->then(function ($batch) {
             $batch = (int) $batch;
-            $app->getPendingDatabaseMigrations()->then(function ($toBeRun) use ($batch) {
+            $this->app->getPendingDatabaseMigrations()->then(function ($toBeRun) use ($batch) {
                 if (count($toBeRun) > 0) {
                     try {
                         $run = 0;

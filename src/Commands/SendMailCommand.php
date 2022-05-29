@@ -11,23 +11,26 @@ use React\Promise\PromiseInterface;
 
 final class SendMailCommand extends Command
 {
+    public static string $command = 'mail:send';
+
+    public static string $description = 'Send the queued email indicated by the provided email primary key.';
+
+    public static $arguments = [
+        'email_id' => [
+            'required' => true
+        ]
+    ];
+
+
     public function run(): PromiseInterface
     {
-        $args = func_get_args();
-        $app = array_shift($args);
-        $EmailId = array_shift($args);
+        $this->requireDatabase();
 
-        if (!($app instanceof \Fissible\Framework\Application)) {
-            throw new \InvalidArgumentException();
-        }
+        $EmailId = $this->argument('email_id');
 
-        if (!$app->db()) {
-            throw new \Exception('Database not configured.');
-        }
-
-        return Email::find($EmailId)->then(function ($Email) use ($app, $EmailId) {
+        return Email::find($EmailId)->then(function ($Email) use ($EmailId) {
             if ($Email) {
-                $MailService = $app->resolve(MailService::class);
+                $MailService = $this->app->resolve(MailService::class);
 
                 if ($MailService->send($Email, $Email->to_email, $Email->to_name) > 0) {
                     echo "[info] Sending email to " . $Email->to_email . '...' . PHP_EOL;

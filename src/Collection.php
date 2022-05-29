@@ -167,7 +167,7 @@ class Collection implements \IteratorAggregate, \Countable, \JsonSerializable
         return null;
     }
 
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         if (is_array($this->set)) {
             return new \ArrayIterator($this->set);
@@ -177,7 +177,7 @@ class Collection implements \IteratorAggregate, \Countable, \JsonSerializable
         }
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return $this->set;
     }

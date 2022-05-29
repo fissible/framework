@@ -16,5 +16,6 @@
   <php>
     <env name="APP_ENV" value="testing"/>
     <env name="SCRIPT_NAME" value="test"/>
+    <const name="SCRIPT_NAME" value="./cli" />
   </php>
 </phpunit>

@@ -14,6 +14,8 @@ class Route
 {
     public static Collection $Table;
 
+    public string $name;
+
     public string $url;
 
     private Collection $Parameters;
@@ -34,8 +36,12 @@ class Route
         static::$globalMiddleware = $globalMiddleware;
     }
 
+    /**
+     * @todo: implement
+     */
     public static function group(callable $group)
     {
+        throw new \RuntimeException('Not implemented');
         $group();
         unset(static::$globalMiddleware);
     }
@@ -112,6 +118,8 @@ class Route
         return static::$Table;
     }
 
+
+
     public function getAction(): array|callable
     {
         return $this->action;
@@ -135,6 +143,11 @@ class Route
     public function getMiddleware(): array
     {
         return $this->middleware;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name ?? null;
     }
 
     public function getSuppliedParameters(string $requestTarget)
@@ -253,6 +266,20 @@ class Route
         return true;
     }
 
+    public function name(string $name): self
+    {
+        if (!isset($this->name) || $this->name !== $name) {
+            static::table()->each(function ($Route) use ($name) {
+                if ($Route->getName() === $name) {
+                    throw new \InvalidArgumentException(sprintf('The Route name "%s" already exists.', $name));
+                }
+            });
+            $this->name = $name;
+        }
+
+        return $this;
+    }
+
     /**
      * Given a requested URL match against the config.
      * 
@@ -298,6 +325,27 @@ class Route
     public function paramCount(): int
     {
         return $this->getParameters()->count();
+    }
+
+    /**
+     * Get the route URL, replace any parameter placeholders with supplied values.
+     * 
+     * @param array $parameters
+     * @return string
+     */
+    public function url(array $parameters = []): string
+    {
+        $url = $this->getUri();
+
+        $this->getParameters()->each(function (RouteParameter $Parameter) use (&$url, $parameters) {
+            $find = '{' . $Parameter->getName() . ($Parameter->isRequired() ? '' : '?') . '}';
+            if (Str::contains($url, $find) && isset($parameters[$Parameter->getName()])) {
+                $value = $parameters[$Parameter->getName()];
+                $url = Str::replace($url, $find, $value);
+            }
+        });
+
+        return $url;
     }
 
     /**

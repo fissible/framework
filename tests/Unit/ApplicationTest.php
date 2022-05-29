@@ -22,7 +22,7 @@ final class ApplicationTest extends TestCase
 
     public function testCommandHelp()
     {
-        $this->app->bindCommand('make:migration', new \Fissible\Framework\Commands\MakeMigrationCommand());
+        $this->app->bindCommand(\Fissible\Framework\Commands\MakeMigrationCommand::class, 'make:migration');
 
         ob_start();
         $this->app->commandHelp();
@@ -34,19 +34,23 @@ final class ApplicationTest extends TestCase
 
     public function testRunCommand()
     {
-        $expected = ['bada', 'bing'];
+        $expected = ['foo' => 'bada', 'bar' => 'bing'];
         $Command = new class () extends \Fissible\Framework\Commands\Command {
+            public static $arguments = [
+                'foo' => [],
+                'bar' => []
+            ];
+
             public function run(): PromiseInterface
             {
-                $args = func_get_args();
+                $args = $this->arguments();
 
                 return Promise\resolve($args);
             }
         };
 
-        $this->app->bindCommand('test:command', $Command);
-        $this->app->runCommand('test:command', $expected)->then(function ($args) use ($expected) {
-            $app = array_shift($args);
+        $this->app->bindCommand($Command::class, 'test:command');
+        $this->app->runCommand('test:command', array_values($expected))->then(function ($args) use ($expected) {
             $this->assertEquals($expected, $args);
         })->done();
     }

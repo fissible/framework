@@ -333,7 +333,7 @@ final class ModelTest extends TestCase
     {
         $this->setUpDatabase();
 
-        $this->db->exec('CREATE TABLE IF NOT EXISTS test_table (
+        $this->db->exec('CREATE TABLE IF NOT EXISTS test_table_float (
             id INTEGER PRIMARY KEY,
             settlement DATE NOT NULL,
             quantity INTEGER NOT NULL,
@@ -351,7 +351,7 @@ final class ModelTest extends TestCase
             'quantity' => (int) $quantity,
             'price' => (float) $price
         ]) extends Model {
-            protected static string $table = 'test_table';
+            protected static string $table = 'test_table_float';
             protected static $casts = ['quantity' => 'int'];
             protected array $dates = ['settlement'];
             protected const CREATED_FIELD = null;
